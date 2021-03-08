@@ -39,7 +39,8 @@ Common::GameErrors Game::setup()
     unsigned long loadrate {0};    
 
     Common::Coordinates coord[Common::Players::PLAYER_COUNT] =
-        {{Common::Ui::PLAYER_1_X, Common::Ui::PLAYER_1_Y}, {Common::Ui::PLAYER_2_X, Common::Ui::PLAYER_2_Y}};
+        {Common::Coordinates(Common::Ui::PLAYER_1_X, Common::Ui::PLAYER_1_Y),
+         Common::Coordinates(Common::Ui::PLAYER_2_X, Common::Ui::PLAYER_2_Y)};
 
     for (int i = Common::Players::Player1; i < Common::Players::PLAYER_COUNT; i++)
     {
@@ -52,7 +53,9 @@ Common::GameErrors Game::setup()
         m_players[(Common::Players)i] = new Player(new Object::Ship(health, new Object::Gun(damage, ammo, shootrate, loadrate)),
                                                     new Object::Shield(false, 200),
                                                     coord[i],
-                                                    Common::Ui::PlayerColors[(Common::Players)i]
+                                                    Common::Ui::PlayerColors[(Common::Players)i],
+                                                    (Common::Players)i,
+                                                    (Common::Ui::Direction[i])
                                                     );
         
         delay(500);
@@ -101,7 +104,7 @@ Common::GameErrors Game::run()
         m_counters.screen += loop_time;
         m_counters.hitMarker += loop_time;
 
-        Ui::Buttons buttons; 
+        Ui::Buttons buttons {0}; 
 
         m_ui->checkButtonPresses(buttons);
 
@@ -120,6 +123,10 @@ Common::GameErrors Game::run()
             
         }
 
+        if (m_counters.bullet > Common::UpdateRates::Micros::Constants::bulletUpdateRate)
+        {
+
+        }
 
         if (m_counters.screen > Common::UpdateRates::Micros::Constants::screenUpdateRate)
         {
@@ -146,16 +153,21 @@ Common::GameErrors Game::run()
 void Game::updatePlayer(Player* player, const Ui::Buttons buttons)
 {
     // movement
-    if (buttons[Common::Ui::ButtonPresses::Right] && player->getCoordinates().y_coord > Common::Ui::courtSizeYmin + 1)
+    Common::Coordinates coords(0,0);
+    bool moved = false;
+    if (buttons[Common::Ui::ButtonPresses::Right] && player->getCoordinates().getYCoord() > Common::Ui::courtSizeYmin + 1)
     {
-        player->setCoordinates({player->getCoordinates().x_coord, (uint16_t)(player->getCoordinates().y_coord - 1)});
+        coords = Common::Coordinates(player->getCoordinates().getXCoord(), (uint16_t)(player->getCoordinates().getYCoord() - 1));
+        moved = true;
     }
 
     if (buttons[Common::Ui::ButtonPresses::Left] && 
-        player->getCoordinates().y_coord + player->getShip()->getSize() < Common::Ui::courtSizeYmax - 1)
+        player->getCoordinates().getYCoord() + player->getShip()->getSize() < Common::Ui::courtSizeYmax - 1)
     {
-        player->setCoordinates({player->getCoordinates().x_coord, (uint16_t)(player->getCoordinates().y_coord + 1)});
+        coords = Common::Coordinates(player->getCoordinates().getXCoord(), (uint16_t)(player->getCoordinates().getYCoord() + 1));
+        moved = true;
     }
+    if (moved) player->setCoordinates(coords);
 
     // shoot
     // if (p_1_shoot && playerGreen.ammoLeft > 0 && playerGreen.shootTimer > playerGreen.shootRate) {

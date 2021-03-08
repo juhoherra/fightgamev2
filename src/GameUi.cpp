@@ -107,53 +107,55 @@ void GameUi::updatePlayer(Player*& player)
 {
     // This only removes and draws the changed part
     Common::Coordinates lastpos = player->returnAndUpdateUiCoordinates();
-    int16_t diff = player->getCoordinates().y_coord - lastpos.y_coord;
-    if (lastpos = player->getCoordinates) return;
+    if (lastpos == player->getCoordinates()) return;
+    int16_t diff = player->getCoordinates().getYCoord() - lastpos.getYCoord();
     if(diff > 0)
     {
-        m_screen->drawVLine(lastpos.x_coord, 
-                            lastpos.y_coord,
+        m_screen->drawVLine(lastpos.getXCoord(), 
+                            lastpos.getYCoord(),
                             diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(lastpos.x_coord + 1,
-                            lastpos.y_coord,
+        m_screen->drawVLine(lastpos.getXCoord() + player->getDirection(),
+                            lastpos.getYCoord(),
                             diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(lastpos.x_coord, 
-                            lastpos.y_coord + player->getShip()->getSize(),
+        m_screen->drawVLine(lastpos.getXCoord(), 
+                            lastpos.getYCoord() + player->getShip()->getSize(),
                             diff,
                             player->getColor());
-        m_screen->drawVLine(lastpos.x_coord + 1, 
-                            lastpos.y_coord + player->getShip()->getSize(),
+        m_screen->drawVLine(lastpos.getXCoord() + player->getDirection(), 
+                            lastpos.getYCoord() + player->getShip()->getSize(),
                             diff,
                             player->getColor());
     }
     else if (diff < 0)
     {
-        m_screen->drawVLine(player->getCoordinates().x_coord,
-                            player->getCoordinates().y_coord + player->getShip()->getSize(),
+        m_screen->drawVLine(player->getCoordinates().getXCoord(),
+                            player->getCoordinates().getYCoord() + player->getShip()->getSize(),
                             -diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(player->getCoordinates().x_coord + 1,
-                            player->getCoordinates().y_coord + player->getShip()->getSize(),
+        m_screen->drawVLine(player->getCoordinates().getXCoord() + player->getDirection(),
+                            player->getCoordinates().getYCoord() + player->getShip()->getSize(),
                             -diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(player->getCoordinates().x_coord, 
-                            player->getCoordinates().y_coord,
+        m_screen->drawVLine(player->getCoordinates().getXCoord(), 
+                            player->getCoordinates().getYCoord(),
                             -diff,
                             player->getColor());
-        m_screen->drawVLine(player->getCoordinates().x_coord + 1, 
-                            player->getCoordinates().y_coord,
+        m_screen->drawVLine(player->getCoordinates().getXCoord() + player->getDirection(), 
+                            player->getCoordinates().getYCoord(),
                             -diff,
                             player->getColor());
     }
+    
     //draw gun
-    m_screen->drawHLine(lastpos.x_coord - (2 /*+ direction*/) * 8,
-                        lastpos.y_coord + player->getShip()->getSize() / 2 + 1,
+    int16_t offset = (player->getDirection() < 0) ? 1 : -16;
+    m_screen->drawHLine(lastpos.getXCoord() + offset,
+                        lastpos.getYCoord() + player->getShip()->getSize() / 2 + 1,
                         16, // gun size
                         Common::Ui::Color::BLACK);
-    m_screen->drawHLine(player->getCoordinates().x_coord - (2 /*+ direction*/) * 8,
-                        player->getCoordinates().y_coord + player->getShip()->getSize() / 2 + 1,
+    m_screen->drawHLine(player->getCoordinates().getXCoord() - (1 + player->getDirection()) * 8,
+                        player->getCoordinates().getYCoord() + player->getShip()->getSize() / 2 + 1,
                         16, // gun size
                         player->getColor());
 

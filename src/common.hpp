@@ -44,6 +44,11 @@ namespace Constants
 }
 
 namespace Ui {
+
+typedef int16_t PointingDirection;
+const PointingDirection Direction[Common::Players::PLAYER_COUNT] = {-1, 1};
+
+
 // constants for array sizes
 const int bulletCount   = 32;
 const int hitPixelCount = 10;
@@ -139,10 +144,25 @@ enum SpecificationRanges
     LoadRateMax     = 2500
 };
 
-struct Coordinates 
+class Coordinates
 {
-    uint16_t x_coord;
-    uint16_t y_coord;
+private:
+    uint16_t m_x;
+    uint16_t m_y;
+public:
+    Coordinates(uint16_t x_coord, uint16_t y_coord) : m_x(x_coord), m_y(y_coord) {}
+    ~Coordinates() {}
+    bool operator==(const Coordinates& coords) const 
+    {
+        return this->m_x == coords.getXCoord() && this->m_y == coords.getYCoord();
+    }
+    void operator=(const Coordinates& coords)
+    {
+        m_x = coords.getXCoord();
+        m_y = coords.getYCoord();
+    }
+    const uint16_t getXCoord() const { return m_x;}
+    const uint16_t getYCoord() const { return m_y;}
 };
 
 } // namespace common

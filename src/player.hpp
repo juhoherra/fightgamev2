@@ -11,13 +11,19 @@
 class Player
 {
 public:
-    Player();
-    Player(Object::Ship* ship, Object::Shield* shield, Common::Coordinates coordinates, uint16_t color);
+    Player(Object::Ship* ship, 
+           Object::Shield* shield, 
+           Common::Coordinates coordinates, 
+           uint16_t color, 
+           Common::Players player_id,
+           Common::Ui::PointingDirection direction);
     ~Player();
     Object::Ship* getShip();
     Object::Shield* getShield();
-    const uint16_t getColor();
-    const Common::Coordinates getCoordinates();
+    const Common::Players getID() const;
+    const Common::Ui::PointingDirection getDirection() const;
+    const uint16_t getColor() const;
+    const Common::Coordinates getCoordinates() const;
     void setCoordinates(Common::Coordinates coord);
     const Common::Coordinates returnAndUpdateUiCoordinates();
 
@@ -27,5 +33,8 @@ private:
     Common::Coordinates m_coordinates;
     Common::Coordinates m_drawnCoordinates;
     uint16_t m_color;
+    Common::Players m_player;
+    Common::Ui::PointingDirection m_direction;
+
 };
 #endif
