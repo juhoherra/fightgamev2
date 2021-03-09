@@ -4,6 +4,7 @@
 #include "IScreen.hpp"
 #include "common.hpp"
 #include "player.hpp"
+#include "bullet.hpp"
 
 
 namespace Ui {
@@ -23,6 +24,8 @@ public:
     void updateAmmoStats(const int& p1Ammo, const int& p2Ammo);
     void updateHealthStats(const int& p1Health, const int& p2Health);
     void updatePlayer(Player*& player);
+    void updateBullet(Bullet*& blt);
+    void deleteBullet(Bullet*& blt);
     void updateRefreshRate(const uint32_t& refresrate_micros);
 
     void checkButtonPresses(Buttons& buttons);

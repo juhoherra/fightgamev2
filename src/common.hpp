@@ -46,11 +46,11 @@ namespace Constants
 namespace Ui {
 
 typedef int16_t PointingDirection;
-const PointingDirection Direction[Common::Players::PLAYER_COUNT] = {-1, 1};
+const PointingDirection Direction[Common::Players::PLAYER_COUNT] = {1, -1};
 
 
 // constants for array sizes
-const int bulletCount   = 32;
+const int bulletCount   = 64;
 const int hitPixelCount = 10;
 
 // play area size
@@ -178,6 +178,10 @@ struct shiptype {
     unsigned long shootrate;
     unsigned long loadrate;
 };
+
+const uint16_t ShipSize = 25;
+const uint16_t HalfShipSize = 12;
+const uint16_t gunSize = 16;
 
 } // namespace OBSOLETE
 

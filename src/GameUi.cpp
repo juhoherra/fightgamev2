@@ -112,51 +112,51 @@ void GameUi::updatePlayer(Player*& player)
     if(diff > 0)
     {
         m_screen->drawVLine(lastpos.getXCoord(), 
-                            lastpos.getYCoord(),
+                            lastpos.getYCoord() - (player->getShip()->getSize() / 2 + 1),
                             diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(lastpos.getXCoord() + player->getDirection(),
-                            lastpos.getYCoord(),
+        m_screen->drawVLine(lastpos.getXCoord() - player->getDirection(),
+                            lastpos.getYCoord() - (player->getShip()->getSize() / 2 + 1),
                             diff,
                             Common::Ui::Color::BLACK);
         m_screen->drawVLine(lastpos.getXCoord(), 
-                            lastpos.getYCoord() + player->getShip()->getSize(),
+                            lastpos.getYCoord() + player->getShip()->getSize() - (player->getShip()->getSize() / 2 + 1),
                             diff,
                             player->getColor());
-        m_screen->drawVLine(lastpos.getXCoord() + player->getDirection(), 
-                            lastpos.getYCoord() + player->getShip()->getSize(),
+        m_screen->drawVLine(lastpos.getXCoord() - player->getDirection(), 
+                            lastpos.getYCoord() + player->getShip()->getSize() - (player->getShip()->getSize() / 2 + 1),
                             diff,
                             player->getColor());
     }
     else if (diff < 0)
     {
         m_screen->drawVLine(player->getCoordinates().getXCoord(),
-                            player->getCoordinates().getYCoord() + player->getShip()->getSize(),
+                            player->getCoordinates().getYCoord() + player->getShip()->getSize() - (player->getShip()->getSize() / 2 + 1),
                             -diff,
                             Common::Ui::Color::BLACK);
-        m_screen->drawVLine(player->getCoordinates().getXCoord() + player->getDirection(),
-                            player->getCoordinates().getYCoord() + player->getShip()->getSize(),
+        m_screen->drawVLine(player->getCoordinates().getXCoord() - player->getDirection(),
+                            player->getCoordinates().getYCoord() + player->getShip()->getSize() - (player->getShip()->getSize() / 2 + 1),
                             -diff,
                             Common::Ui::Color::BLACK);
         m_screen->drawVLine(player->getCoordinates().getXCoord(), 
-                            player->getCoordinates().getYCoord(),
+                            player->getCoordinates().getYCoord() - (player->getShip()->getSize() / 2 + 1),
                             -diff,
                             player->getColor());
-        m_screen->drawVLine(player->getCoordinates().getXCoord() + player->getDirection(), 
-                            player->getCoordinates().getYCoord(),
+        m_screen->drawVLine(player->getCoordinates().getXCoord() - player->getDirection(), 
+                            player->getCoordinates().getYCoord() - (player->getShip()->getSize() / 2 + 1),
                             -diff,
                             player->getColor());
     }
-    
+
     //draw gun
-    int16_t offset = (player->getDirection() < 0) ? 1 : -16;
+    int16_t offset = (player->getDirection() < 0) ? -OBSOLETE::gunSize - 1 : 1;
     m_screen->drawHLine(lastpos.getXCoord() + offset,
-                        lastpos.getYCoord() + player->getShip()->getSize() / 2 + 1,
-                        16, // gun size
+                        lastpos.getYCoord(),
+                        OBSOLETE::gunSize,
                         Common::Ui::Color::BLACK);
-    m_screen->drawHLine(player->getCoordinates().getXCoord() - (1 + player->getDirection()) * 8,
-                        player->getCoordinates().getYCoord() + player->getShip()->getSize() / 2 + 1,
-                        16, // gun size
+    m_screen->drawHLine(player->getCoordinates().getXCoord() + offset,
+                        player->getCoordinates().getYCoord(),
+                        OBSOLETE::gunSize,
                         player->getColor());
 
 
@@ -166,6 +166,27 @@ void GameUi::updatePlayer(Player*& player)
     // if (playerToDraw.shield) {
     //     tft.drawFastVLine(playerToDraw.xCoor - dir*8, playerToDraw.yCoor, playerToDraw.shipSize, color);
     // }
+}
+
+void GameUi::updateBullet(Bullet*& blt)
+{
+    Common::Coordinates lastpos = blt->returnAndUpdateUiCoordinates();
+    m_screen->drawPixel(lastpos.getXCoord(), lastpos.getYCoord(), Common::Ui::BLACK);
+    m_screen->drawPixel(lastpos.getXCoord()- blt->getDirection(), lastpos.getYCoord(), Common::Ui::BLACK);
+
+    m_screen->drawPixel(blt->getCoordinates().getXCoord(),
+                        blt->getCoordinates().getYCoord(),
+                        Common::Ui::WHITE);
+    m_screen->drawPixel(blt->getCoordinates().getXCoord()- blt->getDirection(),
+                        blt->getCoordinates().getYCoord(),
+                        Common::Ui::WHITE);
+}
+
+void GameUi::deleteBullet(Bullet*& blt)
+{
+    Common::Coordinates lastpos = blt->returnAndUpdateUiCoordinates();
+    m_screen->drawPixel(lastpos.getXCoord(), lastpos.getYCoord(), Common::Ui::BLACK);
+    m_screen->drawPixel(lastpos.getXCoord()- blt->getDirection(), lastpos.getYCoord(), Common::Ui::BLACK);
 }
 
 void GameUi::updateRefreshRate(const uint32_t& refresrate_micros)
@@ -256,9 +277,9 @@ const OBSOLETE::shiptype GameUi::printShipSelect(const Common::Ui::Button enter,
     const char damage_str[] = "Damage: ";
     const char shootrate_str[] = "Shooting Rate: ";
     const char loadrate_str[] = "Loading rate: ";
-    const OBSOLETE::shiptype fast {70, 14, 40, 400, 1700};
-    const OBSOLETE::shiptype med {120, 10, 30, 500, 2000};
-    const OBSOLETE::shiptype fat {240, 8, 25, 600, 2200};
+    const OBSOLETE::shiptype fast {70, 14, 40, 400000, 1700000};
+    const OBSOLETE::shiptype med {120, 10, 30, 500000, 2000000};
+    const OBSOLETE::shiptype fat {240, 8, 25, 600000, 2200000};
 
     m_screen->setCursor(30,50);
     m_screen->setTextColor(Common::Ui::WHITE);

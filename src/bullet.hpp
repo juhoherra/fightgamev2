@@ -7,14 +7,31 @@ class Bullet
 {
 
 public:
-    Bullet(/* args */) {}
-    ~Bullet() {}
+    Bullet(int dmg, Common::Coordinates coords, int16_t dir, Common::Players owner, Bullet* next, Bullet* previous);
+    ~Bullet();
+
+    const int getDamage() const;
+    const Common::Coordinates getCoordinates() const;
+    const Common::Coordinates returnAndUpdateUiCoordinates();
+    const int16_t getDirection() const;
+    const Common::Players getOwner() const;
+    void move();
+
+    // Bullet* getPointerToThis() const;
+    Bullet* getNextOnChain() const;
+    Bullet* getPreviousOnChain() const;
+
+    void setNextOnChain(Bullet* blt);
+    void setPreviousOnChain(Bullet* blt);
+
 private:
-    int bulletDamage;
+    int m_bulletDamage;
     Common::Coordinates m_coordinates;
-    int dir;
-    bool owner; // 0 green, 1 red
-    bool active;
+    Common::Coordinates m_drawnCoordinates;
+    int16_t m_dir;
+    Common::Players m_owner;
+    Bullet* m_referenceToPrevious;
+    Bullet* m_referenceToNext;
 };
 
 #endif

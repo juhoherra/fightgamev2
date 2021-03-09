@@ -10,6 +10,7 @@ Game::Game() :
     m_micros_old(0x0),
     m_system_counter(0x0)
 {
+    m_newestBullet = nullptr;
 }
 
 Game::~Game()
@@ -100,6 +101,8 @@ Common::GameErrors Game::run()
 
         m_counters.player[Common::Players::Player1] += loop_time;
         m_counters.player[Common::Players::Player2] += loop_time;
+        m_counters.shootrate[Common::Players::Player1] += loop_time;
+        m_counters.shootrate[Common::Players::Player2] += loop_time;
         m_counters.bullet += loop_time;
         m_counters.screen += loop_time;
         m_counters.hitMarker += loop_time;
@@ -125,7 +128,54 @@ Common::GameErrors Game::run()
 
         if (m_counters.bullet > Common::UpdateRates::Micros::Constants::bulletUpdateRate)
         {
+            Bullet* blt = m_newestBullet;
+            Bullet* nextBullet = nullptr;
+            while (blt != nullptr)
+            {
+                if (isNextCoordinateInsidePlayGround(blt->getCoordinates(), blt->getDirection(), 0, -blt->getDirection()))
+                {
+                    blt->move();
+                    if(blt->getNextOnChain() != nullptr)
+                    {  
+                        nextBullet = blt->getNextOnChain();
+                    }
+                    else
+                    {
+                        nextBullet = nullptr;
+                    }
+                }
+                else
+                {
+                    // deleting bullet
+                    if (blt->getNextOnChain() == nullptr && blt->getPreviousOnChain() == nullptr)
+                    {
+                        m_newestBullet = nullptr;
+                        nextBullet = nullptr;
+                    }
+                    else if (blt->getNextOnChain() == nullptr)
+                    {
+                        blt->getPreviousOnChain()->setNextOnChain(nullptr);
+                        nextBullet = nullptr;
+                    }
+                    else if (blt->getPreviousOnChain() == nullptr)
+                    {
+                        blt->getNextOnChain()->setPreviousOnChain(nullptr);
+                        nextBullet = blt->getNextOnChain();
+                        m_newestBullet = nullptr;
+                    }
+                    else 
+                    {
+                        blt->getNextOnChain()->setPreviousOnChain(blt->getPreviousOnChain());
+                        blt->getPreviousOnChain()->setNextOnChain(blt->getNextOnChain());
+                        nextBullet = blt->getNextOnChain();
+                    }
+                    m_ui->deleteBullet(blt);
+                    delete blt;
+                }
+                blt = nextBullet;
+            }
 
+            m_counters.bullet = 0x0;
         }
 
         if (m_counters.screen > Common::UpdateRates::Micros::Constants::screenUpdateRate)
@@ -133,19 +183,25 @@ Common::GameErrors Game::run()
             // update stuff
             // update players
             // update bullets etc...
+            uint32_t temp_updaterate = m_counters.screen;
+            
+            m_counters.screen = 0x0;
+            
             for (Player* player : m_players)
             {
                 m_ui->updatePlayer(player);
             }
             
+            Bullet* blt = m_newestBullet;
+            while (blt != nullptr)
+            {
+                m_ui->updateBullet(blt);
+                blt = blt->getNextOnChain();
+            }
 
-            m_ui->updateRefreshRate(m_counters.screen);
+            m_ui->updateRefreshRate(temp_updaterate);
 
-            m_counters.screen = 0x0;
         }
-
-        
-
     }
 }
 
@@ -153,38 +209,52 @@ Common::GameErrors Game::run()
 void Game::updatePlayer(Player* player, const Ui::Buttons buttons)
 {
     // movement
-    Common::Coordinates coords(0,0);
-    bool moved = false;
-    if (buttons[Common::Ui::ButtonPresses::Right] && player->getCoordinates().getYCoord() > Common::Ui::courtSizeYmin + 1)
+    bool moved = (buttons[Common::Ui::ButtonPresses::Right] && buttons[Common::Ui::ButtonPresses::Left] || 
+                  !buttons[Common::Ui::ButtonPresses::Right] && !buttons[Common::Ui::ButtonPresses::Left])
+                  ? false : true;
+    if (moved)
     {
-        coords = Common::Coordinates(player->getCoordinates().getXCoord(), (uint16_t)(player->getCoordinates().getYCoord() - 1));
-        moved = true;
+        int16_t move_y = (buttons[Common::Ui::ButtonPresses::Right]) ? -1 : 1;
+        if (isNextCoordinateInsidePlayGround(player->getCoordinates(), 0, move_y, OBSOLETE::HalfShipSize))
+        {
+            player->setCoordinates(Common::Coordinates(player->getCoordinates().getXCoord(),
+                                                      (uint16_t)(player->getCoordinates().getYCoord() + move_y)));
+        }
     }
-
-    if (buttons[Common::Ui::ButtonPresses::Left] && 
-        player->getCoordinates().getYCoord() + player->getShip()->getSize() < Common::Ui::courtSizeYmax - 1)
-    {
-        coords = Common::Coordinates(player->getCoordinates().getXCoord(), (uint16_t)(player->getCoordinates().getYCoord() + 1));
-        moved = true;
-    }
-    if (moved) player->setCoordinates(coords);
-
+    
     // shoot
-    // if (p_1_shoot && playerGreen.ammoLeft > 0 && playerGreen.shootTimer > playerGreen.shootRate) {
-    //     int i = 0;
-    //     while(bulletArr[i]->active == true) {
-    //         i++;
-    //     }
-    //     bulletArr[i]->xCoor = playerGreen.xCoor + 16;
-    //     bulletArr[i]->yCoor = playerGreen.yCoor + playerGreen.shipSize / 2 +1;
-    //     bulletArr[i]->bulletDamage = playerGreen.gunDamage;
-    //     bulletArr[i]->dir = 2;
-    //     bulletArr[i]->active = true;
-    //     bulletArr[i]->owner = 0;
-      
-    //     playerGreen.ammoLeft--;
+    if (buttons[Common::Ui::ButtonPresses::Shoot] && 
+        player->getShip()->getGun()->getAmmo() > 0 &&
+        m_counters.shootrate[player->getID()] > player->getShip()->getGun()->getShootRate())
+    {
+        Common::Coordinates blt_coord(player->getCoordinates().getXCoord() + player->getDirection() * (OBSOLETE::gunSize + 2),
+                                      player->getCoordinates().getYCoord());
+        Bullet* bullet = new Bullet(player->getShip()->getGun()->getDamage(),
+                                    blt_coord,
+                                    player->getDirection(),
+                                    player->getID(),
+                                    m_newestBullet,
+                                    nullptr);
         
-    //     playerGreen.shootTimer = 0;
-    // }
+        if (m_newestBullet != nullptr)
+        {
+            m_newestBullet->setPreviousOnChain(bullet);
+        }
+        m_newestBullet = bullet;
+        m_counters.shootrate[player->getID()] = 0x0;
+
+
+        // player ammo down
+        // player shoot timer zero
+
+    }
+}
+
+bool Game::isNextCoordinateInsidePlayGround(const Common::Coordinates coord, const int16_t move_x, const int16_t move_y, const int16_t offset) const
+{
+    return (coord.getXCoord() + move_x > Common::Ui::courtSizeXmin + offset) &&
+                (coord.getXCoord() + move_x < Common::Ui::courtSizeXmax - offset) &&
+                (coord.getYCoord() + move_y > Common::Ui::courtSizeYmin + offset) &&
+                (coord.getYCoord() + move_y < Common::Ui::courtSizeYmax + offset);
 }
 
